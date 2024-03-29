@@ -1,0 +1,66 @@
+import React, { useEffect, useState } from "react";
+import SideNav from "./templates/SideNav";
+import TopNav from "./templates/TopNav";
+import axios from "../utils/axios";
+import Header from "./templates/Header";
+import HorizontalCards from "./templates/HorizontalCards";
+import Dropdown from "./templates/Dropdown";
+import Loading from "./Loading";
+
+const Home = () => {
+  document.title = "IMDB | homepage";
+  const [wallpaper, setwallpaper] = useState(null);
+  const [trending, settrending] = useState(null);
+  const [category, setcategory] = useState("all");
+
+  const GetHeaderWallpaper = async () => {
+    try {
+      const { data } = await axios.get(`/trending/all/day`);
+
+      let randomdata =
+        data.results[(Math.random() * data.results.length * 1).toFixed()];
+      setwallpaper(randomdata);
+    } catch (error) {
+      console.log("Error: ", error);
+    }
+  };
+  const GetTrending = async () => {
+    try {
+      const { data } = await axios.get(`/trending/${category}/day`);
+      settrending(data.results);
+    } catch (error) {
+      console.log("Error: ", error);
+    }
+  };
+
+  useEffect(() => {
+    GetTrending();
+    !wallpaper && GetHeaderWallpaper();
+  }, [category]);
+
+  // console.log(trending)
+  return wallpaper && trending ? (
+    <>
+      <SideNav />
+      <div className="w-[80%] h-full overflow-auto overflow-x-hidden ">
+        <TopNav />
+        <Header data={wallpaper} />
+        <div className="mb-5 flex justify-between p-5">
+          <h1 className="text-3xl font-semibold text-zinc-400">Trending</h1>
+
+          <Dropdown
+            title="Filter"
+            options={["tv", "movie", "all"]}
+            func={(e) => setcategory(e.target.value)}
+          />
+        </div>
+
+        <HorizontalCards data={trending} />
+      </div>
+    </>
+  ) : (
+    <Loading/>
+  );
+};
+
+export default Home;
